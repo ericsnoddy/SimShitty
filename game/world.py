@@ -6,7 +6,7 @@ import pygame as pg
 import noise
 
 # local
-from .settings import TS, PLACEMENT_ALPHA
+from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR
 
 class World:
     def __init__(self, hud, grid_length_x, grid_length_y, width, height):
@@ -28,6 +28,8 @@ class World:
 
     def update(self, camera):
         mouse_pos = pg.mouse.get_pos()
+        mouse_action = pg.mouse.get_pressed()
+
         self.temp_tile = None
 
         if self.hud.selected_tile:
@@ -37,12 +39,22 @@ class World:
                 img = self.hud.selected_tile['image'].copy()
                 img.set_alpha(PLACEMENT_ALPHA)
 
-                render_pos = self.world[int(grid_x)][int(grid_y)]['render_pos']
+                render_pos = self.world[grid_x][grid_y]['render_pos']
+                iso_poly = self.world[grid_x][grid_y]['iso_poly']
+                collision = self.world[grid_x][grid_y]['collision']
 
                 self.temp_tile = {
                     'image': img,
-                    'render_pos': render_pos
+                    'render_pos': render_pos,
+                    'iso_poly': iso_poly,
+                    'collision': collision
                 }
+                if mouse_action[0] and not collision:
+                    # update world with our new tile
+                    self.world[grid_x][grid_y]['tile'] = self.hud.selected_tile['name']
+                    self.world[grid_x][grid_y]['collision'] = True
+                    # de-select the item
+                    self.hud.selected_tile = None
 
 
     def draw(self, win, camera):
@@ -63,8 +75,16 @@ class World:
                                    render_pos[1] - (img.get_height() - TS) + camera.scroll.y))
 
         if self.temp_tile:
-            render_pos = self.temp_tile['render_pos']
             img = self.temp_tile['image']
+            render_pos = self.temp_tile['render_pos']
+            iso_poly = self.temp_tile['iso_poly']
+            # add offset to poly - no image_height adjustment for iso poly tile
+            iso_poly = [(x + self.grass_tiles.get_width() / 2 + camera.scroll.x, y + camera.scroll.y) for x, y in iso_poly]
+            if self.temp_tile['collision']:
+                pg.draw.polygon(win, INVALID_BLD_COLOR, iso_poly, 3)
+            else:
+                pg.draw.polygon(win, VALID_BLD_COLOR, iso_poly, 3)
+
             # add offset and scroll from tile_key blit above
             pos_x = render_pos[0] + self.grass_tiles.get_width() / 2 + camera.scroll.x
             pos_y = render_pos[1] - (img.get_height() - TS) + camera.scroll.y
@@ -117,7 +137,8 @@ class World:
             'cart_rect': cart_rect,
             'iso_poly': iso_poly,
             'render_pos': [minx, miny],
-            'tile': tile
+            'tile': tile,
+            'collision': False if not tile else True
         }
 
     
@@ -131,8 +152,8 @@ class World:
         cart_x = (iso_x + 2 * iso_y) / 2  # also works: cart_x = cart_y + iso_x
 
         # convert Cart to grid and return
-        grid_x = cart_x // TS
-        grid_y = cart_y // TS
+        grid_x = int(cart_x // TS)
+        grid_y = int(cart_y // TS)
         return grid_x, grid_y
 
 
@@ -159,7 +180,9 @@ class World:
 
     def load_images(self):
         return {
-            'block': pg.image.load('assets/graphics/block.png').convert_alpha(), 
+            'block': pg.image.load('assets/graphics/block.png').convert_alpha(),
+            'building1': pg.image.load('assets/graphics/building01.png').convert_alpha(), 
+            'building2': pg.image.load('assets/graphics/building02.png').convert_alpha(), 
             'tree': pg.image.load('assets/graphics/tree.png').convert_alpha(), 
             'rock': pg.image.load('assets/graphics/rock.png').convert_alpha()
         }
