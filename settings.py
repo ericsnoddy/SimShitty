@@ -1,1 +1,0 @@
-RES = WIDTH, HEIGHT = 100, 100
