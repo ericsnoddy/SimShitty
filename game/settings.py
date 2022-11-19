@@ -12,3 +12,4 @@ HUD_BUFF = 0.01  # as percent of screen width/height
 BLDG_ITEM_BUFF = 10  # px between elements
 RSRC_BUFF_RIGHT = 400  # px from right
 RSRC_BUFF_ITEM = 100  # px between elements
+PLACEMENT_ALPHA = 100  # placement item transparency

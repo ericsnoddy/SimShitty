@@ -10,7 +10,8 @@ from .settings import (
     HUD_BUFF, 
     BLDG_ITEM_BUFF, 
     RSRC_BUFF_ITEM, 
-    RSRC_BUFF_RIGHT
+    RSRC_BUFF_RIGHT,
+    PLACEMENT_ALPHA
 )
 from .utils import draw_text
 
@@ -23,14 +24,19 @@ class HUD:
 
         # resources HUD
         self.rsrc_surf = pg.Surface((self.width * RSRC_HUD_SCALE[0], self.height * RSRC_HUD_SCALE[1]), pg.SRCALPHA)
+        self.rsrc_rect = self.rsrc_surf.get_rect(topleft = (0, 0))
         self.rsrc_surf.fill(self.hud_color)
 
         # building HUD
         self.bldg_surf = pg.Surface((self.width * BLDG_HUD_SCALE[0], self.height * BLDG_HUD_SCALE[1]), pg.SRCALPHA)
+        self.bldg_rect = self.bldg_surf.get_rect(topleft = (self.width * (1 - BLDG_HUD_SCALE[0] - HUD_BUFF), 
+                                                            self.height * (1 - BLDG_HUD_SCALE[1] - HUD_BUFF)))
         self.bldg_surf.fill(self.hud_color)
 
         # selection HUD
         self.select_surf = pg.Surface((self.width * SELECT_HUD_SCALE[0], self.height * SELECT_HUD_SCALE[1]), pg.SRCALPHA)
+        self.select_rect = self.select_surf.get_rect(topleft = (self.width * (1 - SELECT_HUD_SCALE[0]) / 2, 
+                                                                self.height * (1 - SELECT_HUD_SCALE[1] - HUD_BUFF)))
         self.select_surf.fill(self.hud_color)
 
         # images/interaction
@@ -54,10 +60,10 @@ class HUD:
 
     def draw(self, win):
 
-        if self.selected_tile:
-            img = self.selected_tile['image'].copy()
-            img.set_alpha(100)
-            win.blit(img, pg.mouse.get_pos())
+        # if self.selected_tile:
+        #     img = self.selected_tile['image'].copy()
+        #     img.set_alpha(PLACEMENT_ALPHA)
+        #     win.blit(img, pg.mouse.get_pos())
 
         # resource HUD
         win.blit(self.rsrc_surf, (0,0))
