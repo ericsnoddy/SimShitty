@@ -9,7 +9,8 @@ import noise
 from .settings import TS
 
 class World:
-    def __init__(self, grid_length_x, grid_length_y, width, height):
+    def __init__(self, hud, grid_length_x, grid_length_y, width, height):
+        self.hud = hud
         self.grid_length_x = grid_length_x
         self.grid_length_y = grid_length_y
         self.width, self.height = width, height
@@ -21,6 +22,29 @@ class World:
         self.grass_tiles = pg.Surface((self.grid_length_x * TS * 2, self.grid_length_y * TS + 2 * TS)).convert_alpha()
         self.tile_images = self.load_images()
         self.world = self.create_world()
+
+
+    def update(self):
+        pass
+
+
+    def draw(self, win, camera):
+        # can blit a surface that already has blits on it! This helps performance b/c only rendered once!
+        win.blit(self.grass_tiles, (camera.scroll.x, camera.scroll.y))
+
+        for x in range(self.grid_length_x):
+            for y in range(self.grid_length_y):
+                tile_dict = self.world[x][y]
+
+                # images
+                render_pos = tile_dict['render_pos']
+                tile_key = tile_dict['tile']                
+
+                if tile_key:
+                    grass_tiles = self.grass_tiles
+                    img = self.tile_images[tile_key]
+                    win.blit(img, (render_pos[0] + grass_tiles.get_width() / 2 + camera.scroll.x, 
+                                   render_pos[1] - (img.get_height() - TS) + camera.scroll.y))
 
 
     def create_world(self):
@@ -49,6 +73,11 @@ class World:
         # isometric polygon tile
         iso_poly = [self.cart_to_iso(x, y) for x, y in cart_rect]
 
+        # get x closest to left and y closest to top for our blit pos
+        # thus objs are drawn left to right, top to bottom (y-sorting)
+        minx, miny = min([x for x, _ in iso_poly]), min([y for _, y in iso_poly])
+
+        # random scene generation
         r = randint(1, 100)
         # perlin, in short, gives us a more natural randomness for forest
         perlin = noise.pnoise2(grid_x / self.perlin_scale, grid_y / self.perlin_scale) * 100
@@ -59,13 +88,7 @@ class World:
             if r == 1: tile = 'tree'
             elif r == 2: tile = 'rock'
             else: tile = ''
-
-
-        # get x closest to left and y closest to top for our blit pos
-        # so objects are drawn left to right, top to bottom (y-sorting)
-        minx = min([x for x, _ in iso_poly])
-        miny = min([y for _, y in iso_poly])
-
+        
         return {
             'grid': [grid_x, grid_y],
             'cart_rect': cart_rect,
@@ -76,13 +99,15 @@ class World:
 
     
     def cart_to_iso(self, x, y):
+        # std conversion fmla
         iso_x = x - y
         iso_y = (x + y) / 2
         return iso_x, iso_y
 
 
     def load_images(self):
-        block = pg.image.load('assets/graphics/block.png').convert_alpha()
-        tree = pg.image.load('assets/graphics/tree.png').convert_alpha()
-        rock = pg.image.load('assets/graphics/rock.png').convert_alpha()
-        return {'block': block, 'tree': tree, 'rock': rock}
+        return {
+            'block': pg.image.load('assets/graphics/block.png').convert_alpha(), 
+            'tree': pg.image.load('assets/graphics/tree.png').convert_alpha(), 
+            'rock': pg.image.load('assets/graphics/rock.png').convert_alpha()
+        }

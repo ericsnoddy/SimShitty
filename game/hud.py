@@ -52,7 +52,6 @@ class HUD:
                     self.selected_tile = tile    
 
 
-
     def draw(self, win):
 
         if self.selected_tile:
@@ -116,7 +115,8 @@ class HUD:
 
     def create_build_hud(self):
 
-        render_pos = [self.width * (1 - BLDG_HUD_SCALE[0] - HUD_BUFF) + BLDG_ITEM_BUFF, RSRC_BUFF_ITEM, RSRC_BUFF_RIGHT, self.height * (1 - BLDG_HUD_SCALE[1] - HUD_BUFF) + BLDG_ITEM_BUFF, RSRC_BUFF_ITEM, RSRC_BUFF_RIGHT]
+        render_pos = [self.width * (1 - BLDG_HUD_SCALE[0] - HUD_BUFF) + BLDG_ITEM_BUFF,  
+                      self.height * (1 - BLDG_HUD_SCALE[1] - HUD_BUFF) + BLDG_ITEM_BUFF]
         obj_width = self.bldg_surf.get_width() // 5  # 5 equal parts
 
         tiles = []  # all the objs
@@ -124,17 +124,17 @@ class HUD:
         for image_name, image in self.images.items():
             pos = render_pos.copy()
             image_tmp = image.copy()
-            image_scale = self.scale_image(image_tmp, w=obj_width)
-            rect = image_scale.get_rect(topleft = pos)
+            image_scaled = self.scale_image(image_tmp, w=obj_width)
+            rect = image_scaled.get_rect(topleft = pos)
             tiles.append(
                 {
                     'name': image_name,
-                    'icon': image_scale,
+                    'icon': image_scaled,
                     'image': self.images[image_name],
                     'rect': rect
                 }
             )
 
-            render_pos[0] += image_scale.get_width() + BLDG_ITEM_BUFF, RSRC_BUFF_ITEM, RSRC_BUFF_RIGHT
+            render_pos[0] += image_scaled.get_width() + BLDG_ITEM_BUFF
 
         return tiles
