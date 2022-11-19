@@ -9,6 +9,7 @@ from .settings import FPS, TS, TILES
 from .utils import draw_text
 from .world import World
 from .camera import Camera
+from .hud import HUD
 
 class Game:
     def __init__(self, win, clock):
@@ -21,6 +22,9 @@ class Game:
 
         # camera
         self.camera = Camera(self.width, self.height)
+
+        # HUD
+        self.hud = HUD(self.width, self.height)
 
 
     def run(self):
@@ -80,7 +84,10 @@ class Game:
                 # poly = [(x + self.width / 2, y + self.height / 4) for x, y in poly]
                 # pg.draw.polygon(self.win, 'red', poly, 1)
         
+        self.hud.draw(self.win)
+        
         draw_text(self.win, (10, 10), f'fps={self.clock.get_fps() :.1f}', 25, 'white')
+
 
         pg.display.flip()
         
