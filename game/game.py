@@ -50,6 +50,7 @@ class Game:
 
     def update(self):
         self.camera.update()
+        self.hud.update()
 
 
     def draw(self):
