@@ -13,8 +13,9 @@ class World:
         self.grid_length_y = grid_length_y
         self.width, self.height = width, height
         # world is a grid
-        self.world = self.create_world()
+        self.grass_tiles = pg.Surface((self.width, self.height))
         self.tile_images = self.load_images()
+        self.world = self.create_world()
 
 
     def create_world(self):
@@ -24,6 +25,9 @@ class World:
             for grid_y in range(self.grid_length_y):
                 world_tile = self.tile_to_world(grid_x, grid_y)
                 world[grid_x].append(world_tile)
+                render_pos = world_tile['render_pos']
+                self.grass_tiles.blit(self.tile_images['block'], (render_pos[0] + self.width /2, render_pos[1] + self.height / 4))
+
         return world
 
 

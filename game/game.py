@@ -44,12 +44,15 @@ class Game:
     def draw(self):
         self.win.fill('black')
 
+        # can blit a surface that already has blits on it! This helps performance b/c only rendered once!
+        self.win.blit(self.world.grass_tiles, (0, 0))
+
         for x in range(self.world.grid_length_x):
             for y in range(self.world.grid_length_y):
                 tile_dict = self.world.world[x][y]
 
                 # tile info is a square [(topleft), (topright), (bottomleft), (bottomright)]
-                tile = tile_dict['cart_tile']
+                # tile = tile_dict['cart_tile']
                 
                 # # use topleft to make a rect
                 # rect = pg.Rect(tile[0][0], tile[0][1], TS, TS)
@@ -57,17 +60,17 @@ class Game:
 
                 # images
                 render_pos = tile_dict['render_pos']
-                self.win.blit(self.world.tile_images['block'], (render_pos[0] + self.width /2, render_pos[1] + self.height / 4))
-
                 tile_key = tile_dict['tile']
+
                 if tile_key:
                     img = self.world.tile_images[tile_key]
                     self.win.blit(img, (render_pos[0] + self.width /2, 
                                 render_pos[1] + self.height / 4 - (img.get_height() - TS)))
 
-                poly = tile_dict['iso_poly']
-                # shows only half, so move cpolygon center to screen center
-                poly = [(x + self.width / 2, y + self.height / 4) for x, y in poly]
-                pg.draw.polygon(self.win, 'red', poly, 1)
+                # poly = tile_dict['iso_poly']
+                # # offset polygon so shows more than half
+                # poly = [(x + self.width / 2, y + self.height / 4) for x, y in poly]
+                # pg.draw.polygon(self.win, 'red', poly, 1)
+
         pg.display.flip()
         
