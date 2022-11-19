@@ -1,12 +1,15 @@
 # reqs
 import pygame as pg
 
+# local
+from .settings import SCROLL_SPEED
+
 class Camera:
     def __init__(self, width, height):
         self.width, self.height = width, height
-        self.scroll = pg.math.Vector2()
         self.dx, self.dy = 0, 0
-        self.speed = 25
+        self.scroll = pg.math.Vector2()        
+        self.speed = SCROLL_SPEED
 
 
     def update(self):
