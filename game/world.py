@@ -1,3 +1,6 @@
+# std lib
+from random import randint
+
 # reqs
 import pygame as pg
 
@@ -36,12 +39,23 @@ class World:
         # isometric polygon tile
         iso_poly = [self.cart_to_iso(x, y) for x, y in cart_tile]
 
-        tile_data = {
+        r = randint(1, 100)
+        tile = ''
+        if r <= 5: tile = 'tree'
+        elif r <= 10: tile = 'rock'
+
+        # get x closest to left and y closest to top for our blit pos
+        # so objects are drawn left to right, top to bottom (y-sorting)
+        minx = min([x for x, _ in iso_poly])
+        miny = min([y for _, y in iso_poly])
+
+        return {
             'grid': [grid_x, grid_y],
             'cart_tile': cart_tile,
-            'iso_poly': iso_poly
+            'iso_poly': iso_poly,
+            'render_pos': [minx, miny],
+            'tile': tile
         }
-        return tile_data
 
     
     def cart_to_iso(self, x, y):
@@ -51,7 +65,7 @@ class World:
 
 
     def load_images(self):
-        block = pg.image.load('../assets/grpahics/block.png')
-        tree = pg.image.load('../assets/grpahics/tree.png')
-        rock = pg.image.load('../assets/grpahics/rock.png')
+        block = pg.image.load('assets/graphics/block.png')
+        tree = pg.image.load('assets/graphics/tree.png')
+        rock = pg.image.load('assets/graphics/rock.png')
         return {'block': block, 'tree': tree, 'rock': rock}
