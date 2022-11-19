@@ -1,3 +1,3 @@
 FPS = 60
 TS = TILESIZE = 64
-TILES = 10
+TILES = 50

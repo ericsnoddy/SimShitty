@@ -26,7 +26,7 @@ class World:
                 world_tile = self.tile_to_world(grid_x, grid_y)
                 world[grid_x].append(world_tile)
                 render_pos = world_tile['render_pos']
-                self.grass_tiles.blit(self.tile_images['block'], (render_pos[0] + self.width /2, render_pos[1] + self.height / 4))
+                self.grass_tiles.blit(self.tile_images['block'], (render_pos[0] + self.grass_tiles.get_width()/2, render_pos[1]))
 
         return world
 
@@ -34,14 +34,14 @@ class World:
     def tile_to_world(self, grid_x, grid_y):
         # turn grid coords into screen coords
         # Cartesian tile
-        cart_tile = [
+        cart_rect = [
             (grid_x * TS, grid_y * TS),
             (grid_x * TS + TS, grid_y * TS),
             (grid_x * TS + TS, grid_y * TS + TS),
             (grid_x * TS, grid_y * TS + TS)
         ]
         # isometric polygon tile
-        iso_poly = [self.cart_to_iso(x, y) for x, y in cart_tile]
+        iso_poly = [self.cart_to_iso(x, y) for x, y in cart_rect]
 
         r = randint(1, 100)
         tile = ''
@@ -55,7 +55,7 @@ class World:
 
         return {
             'grid': [grid_x, grid_y],
-            'cart_tile': cart_tile,
+            'cart_rect': cart_rect,
             'iso_poly': iso_poly,
             'render_pos': [minx, miny],
             'tile': tile
@@ -69,7 +69,7 @@ class World:
 
 
     def load_images(self):
-        block = pg.image.load('assets/graphics/block.png')
-        tree = pg.image.load('assets/graphics/tree.png')
-        rock = pg.image.load('assets/graphics/rock.png')
+        block = pg.image.load('assets/graphics/block.png').convert_alpha()
+        tree = pg.image.load('assets/graphics/tree.png').convert_alpha()
+        rock = pg.image.load('assets/graphics/rock.png').convert_alpha()
         return {'block': block, 'tree': tree, 'rock': rock}

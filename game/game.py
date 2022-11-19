@@ -6,14 +6,21 @@ import pygame as pg
 
 # local
 from .settings import FPS, TS, TILES
+from .utils import draw_text
 from .world import World
+from .camera import Camera
 
 class Game:
     def __init__(self, win, clock):
         self.win = win
         self.clock = clock
         self.width, self.height = self.win.get_size()
+        
+        # world
         self.world = World(TILES, TILES, self.width, self.height)
+
+        # camera
+        self.camera = Camera(self.width, self.height)
 
 
     def run(self):
@@ -38,14 +45,14 @@ class Game:
 
 
     def update(self):
-        pass
+        self.camera.update()
 
 
     def draw(self):
         self.win.fill('black')
 
         # can blit a surface that already has blits on it! This helps performance b/c only rendered once!
-        self.win.blit(self.world.grass_tiles, (0, 0))
+        self.win.blit(self.world.grass_tiles, (self.camera.scroll.x, self.camera.scroll.y))
 
         for x in range(self.world.grid_length_x):
             for y in range(self.world.grid_length_y):
@@ -60,17 +67,20 @@ class Game:
 
                 # images
                 render_pos = tile_dict['render_pos']
-                tile_key = tile_dict['tile']
+                tile_key = tile_dict['tile']                
 
                 if tile_key:
+                    grass_tiles = self.world.grass_tiles
                     img = self.world.tile_images[tile_key]
-                    self.win.blit(img, (render_pos[0] + self.width /2, 
-                                render_pos[1] + self.height / 4 - (img.get_height() - TS)))
+                    self.win.blit(img, (render_pos[0] + grass_tiles.get_width() / 2 + self.camera.scroll.x, 
+                                render_pos[1] - (img.get_height() - TS) + self.camera.scroll.y))
 
                 # poly = tile_dict['iso_poly']
                 # # offset polygon so shows more than half
                 # poly = [(x + self.width / 2, y + self.height / 4) for x, y in poly]
                 # pg.draw.polygon(self.win, 'red', poly, 1)
+        
+        draw_text(self.win, (10, 10), f'fps={self.clock.get_fps() :.1f}', 25, 'white')
 
         pg.display.flip()
         
