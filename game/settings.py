@@ -1,0 +1,3 @@
+FPS = 60
+TS = TILESIZE = 32
+TILES = 10

@@ -4,17 +4,22 @@ import sys
 # reqs
 import pygame as pg
 
+# local
+from .settings import FPS, TS, TILES
+from .world import World
+
 class Game:
     def __init__(self, win, clock):
         self.win = win
         self.clock = clock
         self.width, self.height = self.win.get_size()
+        self.world = World(TILES, TILES, self.width, self.height)
 
 
     def run(self):
         self.playing = True
         while self.playing:
-            self.clock.tick(60)
+            self.clock.tick(FPS)
             self.events()
             self.update()
             self.draw()
@@ -38,4 +43,20 @@ class Game:
 
     def draw(self):
         self.win.fill('black')
+
+        for x in range(self.world.grid_length_x):
+            for y in range(self.world.grid_length_y):
+
+                # tile info is a square [(topleft), (topright), (bottomleft), (bottomright)]
+                tile = self.world.world[x][y]['cart_tile']
+                
+                # use topleft to make a rect
+                rect = pg.Rect(tile[0][0], tile[0][1], TS, TS)
+                pg.draw.rect(self.win, 'blue', rect, 1)
+
+                poly = self.world.world[x][y]['iso_poly']
+                # shows only half, so move cpolygon center to screen center
+                poly = [(x + self.width / 2, y + self.height / 4) for x, y in poly]
+                pg.draw.polygon(self.win, 'red', poly, 1)
         pg.display.flip()
+        
