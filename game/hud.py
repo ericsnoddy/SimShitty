@@ -43,6 +43,7 @@ class HUD:
         self.images = self.load_images()
         self.tiles = self.create_build_hud()
         self.selected_tile = None
+        self.examined_tile = None
 
 
     def update(self):
@@ -73,10 +74,14 @@ class HUD:
                 (self.width * (1 - BLDG_HUD_SCALE[0] - HUD_BUFF), 
                 self.height * (1 - BLDG_HUD_SCALE[1] - HUD_BUFF)))
 
-        # selection HUD
-        win.blit(self.select_surf, 
-                (self.width * (1 - SELECT_HUD_SCALE[0]) / 2, 
-                self.height * (1 - SELECT_HUD_SCALE[1] - HUD_BUFF)))
+        # selection HUD - don't draw if we're examining an obj
+        if self.examined_tile:
+            w, h = self.select_rect.width, self.select_rect.height
+            win.blit(self.select_surf, 
+                    (self.width * (1 - SELECT_HUD_SCALE[0]) / 2, 
+                    self.height * (1 - SELECT_HUD_SCALE[1] - HUD_BUFF)))
+            img
+            
 
         # building
         for tile in self.tiles:
@@ -87,7 +92,6 @@ class HUD:
         for resource in ['wood:', 'stone:', 'gold:']:
             draw_text(win, (pos, 0), resource, 30, 'white')
             pos += RSRC_BUFF_ITEM
-
 
 
     def load_images(self):

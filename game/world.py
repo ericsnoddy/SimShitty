@@ -31,12 +31,16 @@ class World:
         mouse_pos = pg.mouse.get_pos()
         mouse_action = pg.mouse.get_pressed()
 
-        self.temp_tile = None
+        if mouse_action[2]:  # right click
+            self.tile_to_examine = None
+            
+        grid_x, grid_y = self.mouse_to_grid(mouse_pos[0], mouse_pos[1], camera.scroll)
+
+        self.temp_tile = None        
 
         if self.hud.selected_tile:
-            grid_x, grid_y = self.mouse_to_grid(mouse_pos[0], mouse_pos[1], camera.scroll)
 
-            if self.can_place_tile((grid_x, grid_y)):
+            if self.can_place_tile(grid_x, grid_y):
                 img = self.hud.selected_tile['image'].copy()
                 img.set_alpha(PLACEMENT_ALPHA)
 
@@ -58,10 +62,13 @@ class World:
                     self.hud.selected_tile = None
         else:
             # similar to above
-            grid_x, grid_y = self.mouse_to_grid(mouse_pos[0], mouse_pos[1], camera.scroll)
-            if self.can_place_tile((grid_x, grid_y)):
-                # if True, there is an obj in that spot
-                print(grid_x, grid_y)
+            
+            if self.can_place_tile(grid_x, grid_y):
+                pass
+                '''
+                WHY DOES THIS CAUSE AN INDEX ERROR WHILE SCROLLING TOO FAR?????
+                '''
+                # # if collision True, there is an obj in that spot                
                 collision = self.world[grid_x][grid_y]['collision']
                 if mouse_action[0] and collision:
                     self.tile_to_examine = (grid_x, grid_y)
@@ -161,7 +168,7 @@ class World:
             'iso_poly': iso_poly,
             'render_pos': [minx, miny],
             'tile': tile,
-            'collision': False if not tile else True
+            'collision': (False if not tile else True)
         }
 
     
@@ -172,8 +179,9 @@ class World:
 
         # convert Iso to Cart - reverse of cart_to_iso()
         cart_y = (2 * iso_y - iso_x) / 2
-        cart_x = (iso_x + 2 * iso_y) / 2  # also works: cart_x = cart_y + iso_x
-
+        cart_x = cart_y + iso_x
+        # cart_x = (iso_x + 2 * iso_y) / 2  # this also works
+        
         # convert Cart to grid and return
         grid_x = int(cart_x // TS)
         grid_y = int(cart_y // TS)
@@ -187,7 +195,7 @@ class World:
         return iso_x, iso_y
 
 
-    def can_place_tile(self, grid_pos):
+    def can_place_tile(self, grid_x, grid_y):
 
         # Cannot place over HUDs
         mouse_on_panel = False
@@ -196,7 +204,7 @@ class World:
                 mouse_on_panel = True
 
         # Cannot place out of bounds
-        world_bounds = (0 <= grid_pos[0] <= self.grid_length_x) and (0 <= grid_pos[1] <= self.grid_length_y)
+        world_bounds = (0 <= grid_x <= self.grid_length_x) and (0 <= grid_y <= self.grid_length_y)
 
         return True if world_bounds and not mouse_on_panel else False
 
