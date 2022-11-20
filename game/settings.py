@@ -13,5 +13,6 @@ BLDG_ITEM_BUFF = 10  # px between elements
 RSRC_BUFF_RIGHT = 400  # px from right
 RSRC_BUFF_ITEM = 100  # px between elements
 PLACEMENT_ALPHA = 100  # placement item transparency
-VALID_BLD_COLOR = 'white'  # can place building
+VALID_BLD_COLOR = 'white'  # can place building 
 INVALID_BLD_COLOR = 'red'  # cannot place building
+EXAMINE_COLOR = 'yellow' # examining object

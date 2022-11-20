@@ -6,7 +6,7 @@ import pygame as pg
 import noise
 
 # local
-from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR
+from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAMINE_COLOR
 
 class World:
     def __init__(self, hud, grid_length_x, grid_length_y, width, height):
@@ -24,6 +24,7 @@ class World:
         self.world = self.create_world()
 
         self.temp_tile = None
+        self.tile_to_examine = None
 
 
     def update(self, camera):
@@ -55,6 +56,15 @@ class World:
                     self.world[grid_x][grid_y]['collision'] = True
                     # de-select the item
                     self.hud.selected_tile = None
+        else:
+            # similar to above
+            grid_x, grid_y = self.mouse_to_grid(mouse_pos[0], mouse_pos[1], camera.scroll)
+            if self.can_place_tile((grid_x, grid_y)):
+                # if True, there is an obj in that spot
+                print(grid_x, grid_y)
+                collision = self.world[grid_x][grid_y]['collision']
+                if mouse_action[0] and collision:
+                    self.tile_to_examine = (grid_x, grid_y)
 
 
     def draw(self, win, camera):
@@ -71,15 +81,28 @@ class World:
 
                 if tile_key:
                     img = self.tile_images[tile_key]
-                    win.blit(img, (render_pos[0] + self.grass_tiles.get_width() / 2 + camera.scroll.x, 
-                                   render_pos[1] - (img.get_height() - TS) + camera.scroll.y))
+                    off_x = render_pos[0] + self.grass_tiles.get_width() / 2 + camera.scroll.x
+                    off_y = render_pos[1] - (img.get_height() - TS) + camera.scroll.y
+                    win.blit(img, (off_x, off_y))
+
+                    if self.tile_to_examine:
+                        if (x == self.tile_to_examine[0]) and (y == self.tile_to_examine[1]):
+                            # create a mask and convert to a list of points of its outline
+                            mask = pg.mask.from_surface(self.tile_images[tile_key]).outline()
+                            # apply offset to align mask with the image
+                            mask = [(x + off_x, y + off_y) for x, y in mask]
+                            pg.draw.polygon(win, EXAMINE_COLOR, mask, 3)
+                            
 
         if self.temp_tile:
+            # extract data
             img = self.temp_tile['image']
             render_pos = self.temp_tile['render_pos']
             iso_poly = self.temp_tile['iso_poly']
             # add offset to poly - no image_height adjustment for iso poly tile
             iso_poly = [(x + self.grass_tiles.get_width() / 2 + camera.scroll.x, y + camera.scroll.y) for x, y in iso_poly]
+
+            # color depending on validity of placement
             if self.temp_tile['collision']:
                 pg.draw.polygon(win, INVALID_BLD_COLOR, iso_poly, 3)
             else:
