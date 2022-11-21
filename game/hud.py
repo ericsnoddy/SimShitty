@@ -80,7 +80,7 @@ class HUD:
             win.blit(self.select_surf, 
                     (self.width * (1 - SELECT_HUD_SCALE[0]) / 2, 
                     self.height * (1 - SELECT_HUD_SCALE[1] - HUD_BUFF)))
-            img
+            img = 0
             
 
         # building
