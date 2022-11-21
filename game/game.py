@@ -25,7 +25,9 @@ class Game:
         self.world = World(self.hud, TILES, TILES, self.width, self.height)
 
         # camera
-        self.camera = Camera(self.width, self.height)
+        scroll_start_x = (self.width - self.world.grass_tiles.get_width()) / 2  # map center
+        scroll_start_y = (self.height - self.world.grass_tiles.get_height()) / 4  # map center
+        self.camera = Camera(self.width, self.height, (scroll_start_x, scroll_start_y))
 
         
     def run(self):
@@ -43,7 +45,6 @@ class Game:
                 pg.quit()
                 sys.exit()
             if event.type == pg.KEYDOWN:
-
                 if event.key == pg.K_ESCAPE:
                     pg.quit()
                     sys.exit()
@@ -57,21 +58,8 @@ class Game:
 
     def draw(self):
         self.win.fill('black')
-        self.world.draw(self.win, self.camera)
-
-        # Cart
-        # tile = tile_dict['cart_tile']        
-        # rect = pg.Rect(tile[0][0], tile[0][1], TS, TS)
-        # pg.draw.rect(self.win, 'blue', rect, 1)
-
-        # Iso
-        # poly = tile_dict['iso_poly']
-        # poly = [(x + self.width / 2, y + self.height / 4) for x, y in poly]
-        # pg.draw.polygon(self.win, 'red', poly, 1)
-        
+        self.world.draw(self.win, self.camera)        
         self.hud.draw(self.win)        
         draw_text(self.win, (10, 10), f'fps={self.clock.get_fps() :.1f}', 25, 'white')
-
-
         pg.display.flip()
         

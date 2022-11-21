@@ -6,7 +6,7 @@ import pygame as pg
 import noise
 
 # local
-from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAMINE_COLOR
+from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAMINE_COLOR, SELECTED_BORDER
 
 class World:
     def __init__(self, hud, grid_length_x, grid_length_y, width, height):
@@ -18,10 +18,12 @@ class World:
         # Perlin-scale randomness
         self.perlin_scale = self.grid_length_x / 2
 
-        # world is a grid - iso is wider than it is tall
-        self.grass_tiles = pg.Surface((self.grid_length_x * TS * 2, self.grid_length_y * TS + 2 * TS)).convert_alpha()
+        #  size of grass surface derived from Cart-to-Iso conversion
+        w = self.grid_length_x * TS * 2  # because x-range is [-lengthx * TS, lengthx * TS]
+        h = self.grid_length_y * TS  # because y-range is [0, lengthy * TS]
+        self.grass_tiles = pg.Surface((w, h + 2 * TS)).convert_alpha()  # 2 * TS padding
         self.tile_images = self.load_images()
-        self.world = self.create_world()
+        self.world = self.create_world()  # contains tile info for world grid
 
         self.temp_tile = None
         self.tile_to_examine = None
@@ -64,18 +66,15 @@ class World:
             # similar to above
             
             if self.can_place_tile(grid_x, grid_y):
-                pass
-                '''
-                WHY DOES THIS CAUSE AN INDEX ERROR WHILE SCROLLING TOO FAR?????
-                '''
-                # # if collision True, there is an obj in that spot                
+                print(grid_x, grid_y)
+                # if collision True, there is an obj in that spot                
                 collision = self.world[grid_x][grid_y]['collision']
                 if mouse_action[0] and collision:
                     self.tile_to_examine = (grid_x, grid_y)
 
 
     def draw(self, win, camera):
-        # can blit a surface that already has blits on it! This helps performance b/c only rendered once!
+        # can blit a surface that already has blits on it! This helps performance b/c only rendering once!
         win.blit(self.grass_tiles, (camera.scroll.x, camera.scroll.y))
 
         for x in range(self.grid_length_x):
@@ -98,8 +97,7 @@ class World:
                             mask = pg.mask.from_surface(self.tile_images[tile_key]).outline()
                             # apply offset to align mask with the image
                             mask = [(x + off_x, y + off_y) for x, y in mask]
-                            pg.draw.polygon(win, EXAMINE_COLOR, mask, 3)
-                            
+                            pg.draw.polygon(win, EXAMINE_COLOR, mask, SELECTED_BORDER)                            
 
         if self.temp_tile:
             # extract data
@@ -123,7 +121,7 @@ class World:
 
     def create_world(self):
         world = []
-        for grid_x in range(self.grid_length_x):
+        for grid_x in range(self.grid_length_x):  # 0 -> grid_length_x - 1
             world.append([])
             for grid_y in range(self.grid_length_y):
                 world_tile = self.grid_to_world(grid_x, grid_y)
@@ -173,14 +171,15 @@ class World:
 
     
     def mouse_to_grid(self, x, y, scroll):
-        # convert (x, y) to Iso coords - remove camera scroll and above x-offset
-        iso_x = x - scroll.x - self.grass_tiles.get_width() / 2
-        iso_y = y - scroll.y
+        # convert Cart (x, y) to Iso coords
+        # first we remove camera scroll and above x-offset
+        world_x = x - scroll.x - self.grass_tiles.get_width() / 2
+        world_y = y - scroll.y
 
         # convert Iso to Cart - reverse of cart_to_iso()
-        cart_y = (2 * iso_y - iso_x) / 2
-        cart_x = cart_y + iso_x
-        # cart_x = (iso_x + 2 * iso_y) / 2  # this also works
+        cart_x = (world_x + 2 * world_y) / 2  
+        cart_y = (2 * world_y - world_x) / 2
+        # cart_x = cart_y + world_x # this also works
         
         # convert Cart to grid and return
         grid_x = int(cart_x // TS)
