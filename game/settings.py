@@ -16,3 +16,4 @@ PLACEMENT_ALPHA = 100  # placement item transparency
 VALID_BLD_COLOR = 'white'  # can place building 
 INVALID_BLD_COLOR = 'red'  # cannot place building
 EXAMINE_COLOR = 'yellow' # examining object
+SELECTED_BORDER = 2  # outline thickness
