@@ -21,6 +21,7 @@ from .settings import (
     RSRC_PAD_RIGHT,
 )
 from .utils import draw_text
+from .data import IMAGES
 
 
 
@@ -47,7 +48,9 @@ class HUD:
         self.select_surf.fill(self.hud_color)
 
         # images/interaction
-        self.images = self.load_images()
+        self.images = {}
+        for key in IMAGES.keys():
+            self.images[key] = IMAGES[key].convert_alpha()
         self.tiles = self.create_build_hud()
         self.selected_tile = None
         self.examined_tile = None
@@ -108,15 +111,6 @@ class HUD:
             posx += RSRC_PAD_ITEM
 
 
-    def load_images(self):
-        return {
-            'building1': pg.image.load('assets/graphics/building01.png').convert_alpha(), 
-            'building2': pg.image.load('assets/graphics/building02.png').convert_alpha(), 
-            'tree': pg.image.load('assets/graphics/tree.png').convert_alpha(), 
-            'rock': pg.image.load('assets/graphics/rock.png').convert_alpha()
-        }
-
-
     def scale_image(self, image, w=None, h=None):
         if not w and not h:
             pass
@@ -142,6 +136,7 @@ class HUD:
         tiles = []  # all the objs
 
         for image_name, image in self.images.items():
+            if image_name == 'block': continue
             pos = render_pos.copy()
             image_tmp = image.copy()
             image_scaled = self.scale_image(image_tmp, w=obj_width)

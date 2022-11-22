@@ -8,6 +8,7 @@ import noise
 # local
 from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAM_OBJ_COLOR, SELECTED_BORDER
 from .utils import draw_text
+from .data import IMAGES
 
 class World:
     def __init__(self, hud, grid_length_x, grid_length_y, width, height):
@@ -23,7 +24,12 @@ class World:
         w = self.grid_length_x * TS * 2  # because x-range is [-lengthx * TS, lengthx * TS]
         h = self.grid_length_y * TS  # because y-range is [0, lengthy * TS]
         self.grass_tiles = pg.Surface((w, h + 2 * TS)).convert_alpha()  # 2 * TS padding
-        self.tile_images = self.load_images()
+
+        # import and convert images
+        self.tile_images = {}
+        for key in IMAGES.keys():
+            self.tile_images[key] = IMAGES[key].convert_alpha()
+
         self.world = self.create_world()  # contains tile info for world grid
 
         self.temp_tile = None
@@ -256,12 +262,3 @@ class World:
 
         return True if world_bounds and not mouse_on_panel else False
 
-
-    def load_images(self):
-        return {
-            'block': pg.image.load('assets/graphics/block.png').convert_alpha(),
-            'building1': pg.image.load('assets/graphics/building01.png').convert_alpha(), 
-            'building2': pg.image.load('assets/graphics/building02.png').convert_alpha(), 
-            'tree': pg.image.load('assets/graphics/tree.png').convert_alpha(), 
-            'rock': pg.image.load('assets/graphics/rock.png').convert_alpha()
-        }
