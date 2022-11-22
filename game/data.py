@@ -8,4 +8,3 @@ IMAGES = {
     'tree': pg.image.load('assets/graphics/tree.png'), 
     'rock': pg.image.load('assets/graphics/rock.png')
 }
-

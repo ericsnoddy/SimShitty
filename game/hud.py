@@ -7,7 +7,7 @@ from .settings import (
     RSRC_SCALE, 
     BLDG_SCALE, 
     SELECT_SCALE,
-    EXAM_SCALE,
+    PLACEMENT_ALPHA,
     EXAM_IMG_SCALE,
     EXAM_FONT_SIZE,
     EXAM_FONT_COLOR,
@@ -26,7 +26,8 @@ from .data import IMAGES
 
 
 class HUD:
-    def __init__(self, width, height):
+    def __init__(self, resource_manager, width, height):
+        self.resource_manager = resource_manager
         self.width, self.height = width, height
         self.hud_color = HUD_COLOR
 
@@ -64,9 +65,16 @@ class HUD:
             self.selected_tile = None
 
         for tile in self.tiles:
-            if tile['rect'].collidepoint(mouse_pos):
+            # flag affordability
+            if self.resource_manager.is_affordable(tile['name']):
+                tile['affordable'] = True
+            else:
+                tile['affordable'] = False
+            
+            # check for mouse click selection
+            if tile['rect'].collidepoint(mouse_pos) and tile['affordable']:
                 if mouse_action[0]:  # left click
-                    self.selected_tile = tile    
+                    self.selected_tile = tile
 
 
     def draw(self, win):
@@ -98,16 +106,19 @@ class HUD:
             
             # display the examination text
             draw_text(win, self.select_rect.topleft, self.examined_tile.name, EXAM_FONT_SIZE, EXAM_FONT_COLOR)
-            draw_text(win, self.select_rect.center, str(self.examined_tile.counter), 30, EXAM_FONT_COLOR)
 
         # building
         for tile in self.tiles:
-            win.blit(tile['icon'], tile['rect'].topleft)
+            icon = tile['icon'].copy()
+            if not tile['affordable']:
+                icon.set_alpha(PLACEMENT_ALPHA)
+
+            win.blit(icon, tile['rect'].topleft)
 
         # resources
         posx = self.width - RSRC_PAD_RIGHT
-        for resource in ['wood:', 'stone:', 'gold:']:
-            draw_text(win, (posx, 0), resource, RSRC_FONT_SIZE, RSRC_FONT_COLOR)
+        for resource, value in self.resource_manager.resources.items():
+            draw_text(win, (posx, 0), f'{resource}: {str(value)}', RSRC_FONT_SIZE, RSRC_FONT_COLOR)
             posx += RSRC_PAD_ITEM
 
 
@@ -145,7 +156,8 @@ class HUD:
                         'name': image_name,
                         'icon': image_scaled,
                         'image': self.images[image_name],
-                        'rect': rect
+                        'rect': rect,
+                        'affordable': True
                     }
                 )
 

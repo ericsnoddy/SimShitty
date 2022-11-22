@@ -7,13 +7,15 @@ import noise
 
 # local
 from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAM_OBJ_COLOR, SELECTED_BORDER
-from .utils import draw_text
 from .data import IMAGES
 from .buildings import LumberMill, Masonry
+# from .utils import draw_text  # DEBUGGING
+
 
 class World:
-    def __init__(self, entities, hud, grid_length_x, grid_length_y, width, height):
+    def __init__(self, entities, resource_manager, hud, grid_length_x, grid_length_y, width, height):
         self.entities = entities
+        self.resource_manager = resource_manager
         self.hud = hud
         self.grid_length_x = grid_length_x
         self.grid_length_y = grid_length_y
@@ -74,9 +76,9 @@ class World:
 
                     ent = None
                     if self.hud.selected_tile['name'] == 'lumbermill':
-                        ent = LumberMill(render_pos)                        
+                        ent = LumberMill(render_pos, self.resource_manager)                        
                     elif self.hud.selected_tile['name'] == 'masonry':
-                        ent = Masonry(render_pos)
+                        ent = Masonry(render_pos, self.resource_manager)
                     if ent:
                         self.entities.append(ent)
                         self.buildings[grid_x][grid_y] = ent
@@ -98,8 +100,8 @@ class World:
         # can blit a surface that already has blits on it! This helps performance b/c only rendering once!
         win.blit(self.grass_tiles, (camera.scroll.x, camera.scroll.y))
 
+        # DEBUG DRAW GRIDS
         '''
-        # DEBUG DRAW GRID
         grass_tiles_rect = self.grass_tiles.get_rect(topleft = (camera.scroll.x, camera.scroll.y))        
         world_rect = [
             (0, 0),
@@ -133,9 +135,9 @@ class World:
                 p = self.world[x][y]["iso_poly"]
                 p = [(x + xoff, y + yoff) for x, y in p]
                 # Cart
-                # draw_text(win, (x * TS + xoff, y * TS + yoff), f'({x}, {y})', 15, 'red')
+                draw_text(win, (x * TS + xoff, y * TS + yoff), f'({x}, {y})', 15, 'red')
                 # Iso
-                # draw_text(win, self.cart_to_iso(x * TS + xoff, y* TS + yoff), f'({x}, {y})', 15, 'blue')
+                draw_text(win, self.cart_to_iso(x * TS + xoff, y* TS + yoff), f'({x}, {y})', 15, 'blue')
                 pg.draw.polygon(win, 'red', p, 1)      
 
         # # draw screen outline
@@ -236,7 +238,7 @@ class World:
             tile = 'tree'
         else:
             if r == 1: tile = 'tree'
-            elif r == 2: tile = 'rock'
+            elif r == 2 or r == 3: tile = 'rock'
             else: tile = ''
         
         return {

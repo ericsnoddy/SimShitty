@@ -10,7 +10,7 @@ from .utils import draw_text
 from .world import World
 from .camera import Camera
 from .hud import HUD
-
+from .resource_manager import ResourceManager
 
 class Game:
     def __init__(self, win, clock):
@@ -21,11 +21,14 @@ class Game:
         # entities
         self.entities = []
 
+        # resource manager
+        self.resource_manager = ResourceManager()
+
         # HUD
-        self.hud = HUD(self.width, self.height)
+        self.hud = HUD(self.resource_manager, self.width, self.height)
         
         # world
-        self.world = World(self.entities, self.hud, TILES, TILES, self.width, self.height)
+        self.world = World(self.entities, self.resource_manager, self.hud, TILES, TILES, self.width, self.height)
 
         # camera
         scroll_start_x = (self.width - self.world.grass_tiles.get_width()) / 2  # map center
