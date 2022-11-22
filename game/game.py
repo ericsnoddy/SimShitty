@@ -27,6 +27,7 @@ class Game:
         # camera
         scroll_start_x = (self.width - self.world.grass_tiles.get_width()) / 2  # map center
         scroll_start_y = (self.height - self.world.grass_tiles.get_height()) / 4  # map center
+        scroll_start_x, scroll_start_y = 0, 0
         self.camera = Camera(self.width, self.height, (scroll_start_x, scroll_start_y))
 
         
@@ -61,5 +62,10 @@ class Game:
         self.world.draw(self.win, self.camera)        
         self.hud.draw(self.win)        
         draw_text(self.win, (10, 10), f'fps={self.clock.get_fps() :.1f}', 25, 'white')
+        mpos = pg.mouse.get_pos()
+        x, y = self.world.mouse_to_grid(mpos[0], mpos[1], self.camera.scroll)
+        draw_text(self.win, (10, 40), 
+            f'(pgx,pgy)={mpos}, cam.off=({self.camera.scroll.x}, {self.camera.scroll.y}), mtg=({x}, {y}) ',
+            25, 'white')
         pg.display.flip()
         

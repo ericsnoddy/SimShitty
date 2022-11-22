@@ -6,7 +6,8 @@ import pygame as pg
 import noise
 
 # local
-from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAMINE_COLOR, SELECTED_BORDER
+from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAM_OBJ_COLOR, SELECTED_BORDER
+from .utils import draw_text
 
 class World:
     def __init__(self, hud, grid_length_x, grid_length_y, width, height):
@@ -35,6 +36,7 @@ class World:
 
         if mouse_action[2]:  # right click
             self.tile_to_examine = None
+            self.hud.examined_tile = None
             
         grid_x, grid_y = self.mouse_to_grid(mouse_pos[0], mouse_pos[1], camera.scroll)
 
@@ -64,18 +66,65 @@ class World:
                     self.hud.selected_tile = None
         else:
             # similar to above
-            
             if self.can_place_tile(grid_x, grid_y):
-                print(grid_x, grid_y)
                 # if collision True, there is an obj in that spot                
                 collision = self.world[grid_x][grid_y]['collision']
                 if mouse_action[0] and collision:
                     self.tile_to_examine = (grid_x, grid_y)
+                    self.hud.examined_tile = self.world[grid_x][grid_y]
 
 
     def draw(self, win, camera):
         # can blit a surface that already has blits on it! This helps performance b/c only rendering once!
         win.blit(self.grass_tiles, (camera.scroll.x, camera.scroll.y))
+
+        '''
+        # DEBUG DRAW GRID
+        grass_tiles_rect = self.grass_tiles.get_rect(topleft = (camera.scroll.x, camera.scroll.y))        
+        world_rect = [
+            (0, 0),
+            (0, self.grid_length_x * TS),
+            (self.grid_length_x * TS, self.grid_length_y * TS),
+            (self.grid_length_x * TS, 0)
+        ]
+        xoff = camera.scroll.x + self.grass_tiles.get_width() / 2
+        yoff = camera.scroll.y
+
+        iso_poly = [self.cart_to_iso(x, y) for x, y in world_rect]
+        world_rect = [(x + xoff, y + yoff) for x, y in world_rect]
+        iso_poly = [(x + xoff, y + yoff) for x, y in iso_poly]
+
+        # draw grass_tiles surface
+        pg.draw.rect(win, 'green', grass_tiles_rect, 3)
+
+        # draw Cartesian grid
+        for x in range(1, self.grid_length_x):
+            for y in range(1, self.grid_length_y + 1):                
+                pg.draw.line(win, 'blue', (x * TS + xoff, yoff), (x * TS + xoff, y * TS + yoff), 1)
+                pg.draw.line(win, 'blue', (xoff, y * TS + yoff), (self.grid_length_x * TS + xoff, y * TS + yoff), 1)
+
+        
+        # draw Cartesian (world) grid outline
+        pg.draw.lines(win, 'blue', True, world_rect, 3)
+
+        # draw Iso grid
+        for x in range(self.grid_length_x):
+            for y in range(self.grid_length_y):
+                p = self.world[x][y]["iso_poly"]
+                p = [(x + xoff, y + yoff) for x, y in p]
+                # Cart
+                # draw_text(win, (x * TS + xoff, y * TS + yoff), f'({x}, {y})', 15, 'red')
+                # Iso
+                # draw_text(win, self.cart_to_iso(x * TS + xoff, y* TS + yoff), f'({x}, {y})', 15, 'blue')
+                pg.draw.polygon(win, 'red', p, 1)      
+
+        # # draw screen outline
+        # win_rect = win.get_rect(topleft = (0, 0))
+        # pg.draw.rect(win, 'white', win_rect, 2)
+
+
+        ## END DEBUG
+        '''        
 
         for x in range(self.grid_length_x):
             for y in range(self.grid_length_y):
@@ -97,7 +146,7 @@ class World:
                             mask = pg.mask.from_surface(self.tile_images[tile_key]).outline()
                             # apply offset to align mask with the image
                             mask = [(x + off_x, y + off_y) for x, y in mask]
-                            pg.draw.polygon(win, EXAMINE_COLOR, mask, SELECTED_BORDER)                            
+                            pg.draw.polygon(win, EXAM_OBJ_COLOR, mask, SELECTED_BORDER)                            
 
         if self.temp_tile:
             # extract data
@@ -202,8 +251,8 @@ class World:
             if rect.collidepoint(pg.mouse.get_pos()):
                 mouse_on_panel = True
 
-        # Cannot place out of bounds
-        world_bounds = (0 <= grid_x <= self.grid_length_x) and (0 <= grid_y <= self.grid_length_y)
+        # Cannot place out of bounds (also restricts index out of range error for grid_x, grid_y)
+        world_bounds = (0 <= grid_x < self.grid_length_x) and (0 <= grid_y < self.grid_length_y)
 
         return True if world_bounds and not mouse_on_panel else False
 

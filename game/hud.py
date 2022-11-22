@@ -4,14 +4,21 @@ import pygame as pg
 # local
 from .settings import (
     HUD_COLOR, 
-    RSRC_HUD_SCALE, 
-    BLDG_HUD_SCALE, 
-    SELECT_HUD_SCALE, 
-    HUD_BUFF, 
-    BLDG_ITEM_BUFF, 
-    RSRC_BUFF_ITEM, 
-    RSRC_BUFF_RIGHT,
-    PLACEMENT_ALPHA
+    RSRC_SCALE, 
+    BLDG_SCALE, 
+    SELECT_SCALE,
+    EXAM_SCALE,
+    EXAM_IMG_SCALE,
+    EXAM_FONT_SIZE,
+    EXAM_FONT_COLOR,
+    EXAM_PAD_L,
+    EXAM_PAD_T,
+    RSRC_FONT_SIZE,
+    RSRC_FONT_COLOR,
+    HUD_PAD,
+    BLDG_ITEM_PAD, 
+    RSRC_PAD_ITEM, 
+    RSRC_PAD_RIGHT,
 )
 from .utils import draw_text
 
@@ -23,20 +30,20 @@ class HUD:
         self.hud_color = HUD_COLOR
 
         # resources HUD
-        self.rsrc_surf = pg.Surface((self.width * RSRC_HUD_SCALE[0], self.height * RSRC_HUD_SCALE[1]), pg.SRCALPHA)
+        self.rsrc_surf = pg.Surface((self.width * RSRC_SCALE[0], self.height * RSRC_SCALE[1]), pg.SRCALPHA)
         self.rsrc_rect = self.rsrc_surf.get_rect(topleft = (0, 0))
         self.rsrc_surf.fill(self.hud_color)
 
         # building HUD
-        self.bldg_surf = pg.Surface((self.width * BLDG_HUD_SCALE[0], self.height * BLDG_HUD_SCALE[1]), pg.SRCALPHA)
-        self.bldg_rect = self.bldg_surf.get_rect(topleft = (self.width * (1 - BLDG_HUD_SCALE[0] - HUD_BUFF), 
-                                                            self.height * (1 - BLDG_HUD_SCALE[1] - HUD_BUFF)))
+        self.bldg_surf = pg.Surface((self.width * BLDG_SCALE[0], self.height * BLDG_SCALE[1]), pg.SRCALPHA)
+        self.bldg_rect = self.bldg_surf.get_rect(topleft = (self.width * (1 - BLDG_SCALE[0] - HUD_PAD), 
+                                                            self.height * (1 - BLDG_SCALE[1] - HUD_PAD)))
         self.bldg_surf.fill(self.hud_color)
 
         # selection HUD
-        self.select_surf = pg.Surface((self.width * SELECT_HUD_SCALE[0], self.height * SELECT_HUD_SCALE[1]), pg.SRCALPHA)
-        self.select_rect = self.select_surf.get_rect(topleft = (self.width * (1 - SELECT_HUD_SCALE[0]) / 2, 
-                                                                self.height * (1 - SELECT_HUD_SCALE[1] - HUD_BUFF)))
+        self.select_surf = pg.Surface((self.width * SELECT_SCALE[0], self.height * SELECT_SCALE[1]), pg.SRCALPHA)
+        self.select_rect = self.select_surf.get_rect(topleft = (self.width * (1 - SELECT_SCALE[0]) / 2, 
+                                                                self.height * (1 - SELECT_SCALE[1] - HUD_PAD)))
         self.select_surf.fill(self.hud_color)
 
         # images/interaction
@@ -71,27 +78,34 @@ class HUD:
 
         # building HUD
         win.blit(self.bldg_surf, 
-                (self.width * (1 - BLDG_HUD_SCALE[0] - HUD_BUFF), 
-                self.height * (1 - BLDG_HUD_SCALE[1] - HUD_BUFF)))
+                (self.width * (1 - BLDG_SCALE[0] - HUD_PAD), 
+                self.height * (1 - BLDG_SCALE[1] - HUD_PAD)))
 
         # selection HUD - don't draw if we're examining an obj
         if self.examined_tile:
+            tile = self.examined_tile['tile']
             w, h = self.select_rect.width, self.select_rect.height
-            win.blit(self.select_surf, 
-                    (self.width * (1 - SELECT_HUD_SCALE[0]) / 2, 
-                    self.height * (1 - SELECT_HUD_SCALE[1] - HUD_BUFF)))
-            img = 0
+
+            win.blit(self.select_surf, (self.width * (1 - SELECT_SCALE[0]) / 2, 
+                                        self.height * (1 - SELECT_SCALE[1] - HUD_PAD)))
+
+            img = self.images[tile].copy()
+            img_scaled = self.scale_image(img, h = h * EXAM_IMG_SCALE)            
+            win.blit(img_scaled, ((self.width * (1 - SELECT_SCALE[0]) / 2) + EXAM_PAD_L, 
+                                (self.height * (1 - SELECT_SCALE[1] - HUD_PAD)) + EXAM_PAD_T))
             
+            pg.draw.rect(win, 'white', self.select_rect, 1)
+            draw_text(win, self.select_rect.center, tile, EXAM_FONT_SIZE, EXAM_FONT_COLOR)
 
         # building
         for tile in self.tiles:
             win.blit(tile['icon'], tile['rect'].topleft)
 
         # resources
-        pos = self.width - RSRC_BUFF_RIGHT
+        posx = self.width - RSRC_PAD_RIGHT
         for resource in ['wood:', 'stone:', 'gold:']:
-            draw_text(win, (pos, 0), resource, 30, 'white')
-            pos += RSRC_BUFF_ITEM
+            draw_text(win, (posx, 0), resource, RSRC_FONT_SIZE, RSRC_FONT_COLOR)
+            posx += RSRC_PAD_ITEM
 
 
     def load_images(self):
@@ -121,8 +135,8 @@ class HUD:
 
     def create_build_hud(self):
 
-        render_pos = [self.width * (1 - BLDG_HUD_SCALE[0] - HUD_BUFF) + BLDG_ITEM_BUFF,  
-                      self.height * (1 - BLDG_HUD_SCALE[1] - HUD_BUFF) + BLDG_ITEM_BUFF]
+        render_pos = [self.width * (1 - BLDG_SCALE[0] - HUD_PAD) + BLDG_ITEM_PAD,  
+                      self.height * (1 - BLDG_SCALE[1] - HUD_PAD) + BLDG_ITEM_PAD]
         obj_width = self.bldg_surf.get_width() // 5  # 5 equal parts
 
         tiles = []  # all the objs
@@ -141,6 +155,6 @@ class HUD:
                 }
             )
 
-            render_pos[0] += image_scaled.get_width() + BLDG_ITEM_BUFF
+            render_pos[0] += image_scaled.get_width() + BLDG_ITEM_PAD
 
         return tiles

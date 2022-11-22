@@ -1,6 +1,3 @@
-# std lib
-import sys
-
 # reqs
 import pygame as pg
 
