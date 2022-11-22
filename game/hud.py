@@ -86,19 +86,19 @@ class HUD:
 
         # selection HUD - don't draw if we're examining an obj
         if self.examined_tile:
-            tile = self.examined_tile['tile']
-            w, h = self.select_rect.width, self.select_rect.height
-
+            # display the HUD window
             win.blit(self.select_surf, (self.width * (1 - SELECT_SCALE[0]) / 2, 
                                         self.height * (1 - SELECT_SCALE[1] - HUD_PAD)))
 
-            img = self.images[tile].copy()
-            img_scaled = self.scale_image(img, h = h * EXAM_IMG_SCALE)            
+            # display the building image
+            img = self.examined_tile.image.copy()
+            img_scaled = self.scale_image(img, h = self.select_rect.height * EXAM_IMG_SCALE)            
             win.blit(img_scaled, ((self.width * (1 - SELECT_SCALE[0]) / 2) + EXAM_PAD_L, 
                                 (self.height * (1 - SELECT_SCALE[1] - HUD_PAD)) + EXAM_PAD_T))
             
-            pg.draw.rect(win, 'white', self.select_rect, 1)
-            draw_text(win, self.select_rect.center, tile, EXAM_FONT_SIZE, EXAM_FONT_COLOR)
+            # display the examination text
+            draw_text(win, self.select_rect.topleft, self.examined_tile.name, EXAM_FONT_SIZE, EXAM_FONT_COLOR)
+            draw_text(win, self.select_rect.center, str(self.examined_tile.counter), 30, EXAM_FONT_COLOR)
 
         # building
         for tile in self.tiles:
@@ -134,22 +134,21 @@ class HUD:
         obj_width = self.bldg_surf.get_width() // 5  # 5 equal parts
 
         tiles = []  # all the objs
-
         for image_name, image in self.images.items():
-            if image_name == 'block': continue
-            pos = render_pos.copy()
-            image_tmp = image.copy()
-            image_scaled = self.scale_image(image_tmp, w=obj_width)
-            rect = image_scaled.get_rect(topleft = pos)
-            tiles.append(
-                {
-                    'name': image_name,
-                    'icon': image_scaled,
-                    'image': self.images[image_name],
-                    'rect': rect
-                }
-            )
+            if image_name in ['lumbermill', 'masonry']:
+                pos = render_pos.copy()
+                image_tmp = image.copy()
+                image_scaled = self.scale_image(image_tmp, w=obj_width)
+                rect = image_scaled.get_rect(topleft = pos)
+                tiles.append(
+                    {
+                        'name': image_name,
+                        'icon': image_scaled,
+                        'image': self.images[image_name],
+                        'rect': rect
+                    }
+                )
 
-            render_pos[0] += image_scaled.get_width() + BLDG_ITEM_PAD
+                render_pos[0] += image_scaled.get_width() + BLDG_ITEM_PAD
 
         return tiles

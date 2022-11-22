@@ -9,9 +9,11 @@ import noise
 from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAM_OBJ_COLOR, SELECTED_BORDER
 from .utils import draw_text
 from .data import IMAGES
+from .buildings import LumberMill, Masonry
 
 class World:
-    def __init__(self, hud, grid_length_x, grid_length_y, width, height):
+    def __init__(self, entities, hud, grid_length_x, grid_length_y, width, height):
+        self.entities = entities
         self.hud = hud
         self.grid_length_x = grid_length_x
         self.grid_length_y = grid_length_y
@@ -31,6 +33,9 @@ class World:
             self.tile_images[key] = IMAGES[key].convert_alpha()
 
         self.world = self.create_world()  # contains tile info for world grid
+
+        # init buildings list
+        self.buildings = [[None for x in range(self.grid_length_x)] for y in range(self.grid_length_y)]
 
         self.temp_tile = None
         self.tile_to_examine = None
@@ -66,7 +71,17 @@ class World:
                 }
                 if mouse_action[0] and not collision:
                     # update world with our new tile
-                    self.world[grid_x][grid_y]['tile'] = self.hud.selected_tile['name']
+
+                    ent = None
+                    if self.hud.selected_tile['name'] == 'lumbermill':
+                        ent = LumberMill(render_pos)                        
+                    elif self.hud.selected_tile['name'] == 'masonry':
+                        ent = Masonry(render_pos)
+                    if ent:
+                        self.entities.append(ent)
+                        self.buildings[grid_x][grid_y] = ent
+                    
+                    # self.world[grid_x][grid_y]['tile'] = self.hud.selected_tile['name']
                     self.world[grid_x][grid_y]['collision'] = True
                     # de-select the item
                     self.hud.selected_tile = None
@@ -74,11 +89,10 @@ class World:
             # similar to above
             if self.can_place_tile(grid_x, grid_y):
                 # if collision True, there is an obj in that spot                
-                collision = self.world[grid_x][grid_y]['collision']
-                if mouse_action[0] and collision:
+                building = self.buildings[grid_x][grid_y]
+                if mouse_action[0] and building:
                     self.tile_to_examine = (grid_x, grid_y)
-                    self.hud.examined_tile = self.world[grid_x][grid_y]
-
+                    self.hud.examined_tile = building
 
     def draw(self, win, camera):
         # can blit a surface that already has blits on it! This helps performance b/c only rendering once!
@@ -138,21 +152,31 @@ class World:
 
                 # images
                 render_pos = tile_dict['render_pos']
-                tile_key = tile_dict['tile']                
 
+                # draw world tiles
+                tile_key = tile_dict['tile']                   
                 if tile_key:
                     img = self.tile_images[tile_key]
                     off_x = render_pos[0] + self.grass_tiles.get_width() / 2 + camera.scroll.x
-                    off_y = render_pos[1] - (img.get_height() - TS) + camera.scroll.y
+                    off_y = render_pos[1] - (img.get_height() - TS) + camera.scroll.y                    
                     win.blit(img, (off_x, off_y))
+
+                # draw buildings
+                building = self.buildings[x][y]
+                
+                if building:
+                    off_x = render_pos[0] + self.grass_tiles.get_width() / 2 + camera.scroll.x
+                    off_y = render_pos[1] - (building.image.get_height() - TS) + camera.scroll.y
+                    win.blit(building.image, (off_x, off_y))
 
                     if self.tile_to_examine:
                         if (x == self.tile_to_examine[0]) and (y == self.tile_to_examine[1]):
                             # create a mask and convert to a list of points of its outline
-                            mask = pg.mask.from_surface(self.tile_images[tile_key]).outline()
+                            mask = pg.mask.from_surface(building.image).outline()
                             # apply offset to align mask with the image
                             mask = [(x + off_x, y + off_y) for x, y in mask]
-                            pg.draw.polygon(win, EXAM_OBJ_COLOR, mask, SELECTED_BORDER)                            
+                            pg.draw.polygon(win, EXAM_OBJ_COLOR, mask, SELECTED_BORDER)
+
 
         if self.temp_tile:
             # extract data
@@ -182,7 +206,7 @@ class World:
                 world_tile = self.grid_to_world(grid_x, grid_y)
                 world[grid_x].append(world_tile)
                 render_pos = world_tile['render_pos']
-                # apply x-offset so all x-vals >= 0
+                # apply x-offset
                 self.grass_tiles.blit(self.tile_images['block'], (render_pos[0] + self.grass_tiles.get_width() / 2, render_pos[1]))
         return world
 

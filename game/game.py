@@ -18,11 +18,14 @@ class Game:
         self.clock = clock
         self.width, self.height = self.win.get_size()
 
+        # entities
+        self.entities = []
+
         # HUD
         self.hud = HUD(self.width, self.height)
         
         # world
-        self.world = World(self.hud, TILES, TILES, self.width, self.height)
+        self.world = World(self.entities, self.hud, TILES, TILES, self.width, self.height)
 
         # camera
         scroll_start_x = (self.width - self.world.grass_tiles.get_width()) / 2  # map center
@@ -53,6 +56,7 @@ class Game:
 
     def update(self):
         self.camera.update()
+        for e in self.entities: e.update()
         self.hud.update()
         self.world.update(self.camera)
 
