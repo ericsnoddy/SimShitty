@@ -1,6 +1,6 @@
 FPS = 60
 TS = TILESIZE = 64
-TILES = 25
+TILES = 50
 SCROLL_SPEED = 25
 
 # HUD
@@ -35,5 +35,6 @@ COSTS = {
     'lumbermill': {'wood': 7, 'stone': 3},
     'masonry': {'wood': 3, 'stone': 5}
 }
-COOLDOWN_WOOD = 2000
-COOLDOWN_STONE = 4000
+COOLDOWN_WOOD = 2000  # timer for wood collection
+COOLDOWN_STONE = 4000  # timer for stone collection
+WORKER_PATH_RATE = 1000  # timer for new position pathfinding

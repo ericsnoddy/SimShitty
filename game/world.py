@@ -7,19 +7,23 @@ import noise
 
 # local
 from .settings import TS, PLACEMENT_ALPHA, VALID_BLD_COLOR, INVALID_BLD_COLOR, EXAM_OBJ_COLOR, SELECTED_BORDER
-from .data import IMAGES
 from .buildings import LumberMill, Masonry
 # from .utils import draw_text  # DEBUGGING
 
 
 class World:
-    def __init__(self, entities, resource_manager, hud, grid_length_x, grid_length_y, width, height):
+    def __init__(self, entities, resource_manager, hud, grid_length_x, grid_length_y, width, height, game_images):
         self.entities = entities
         self.resource_manager = resource_manager
         self.hud = hud
         self.grid_length_x = grid_length_x
         self.grid_length_y = grid_length_y
         self.width, self.height = width, height
+
+        # import and convert images
+        self.tile_images = {}
+        for key in game_images.keys():
+            self.tile_images[key] = game_images[key].convert_alpha()
 
         # Perlin-scale randomness
         self.perlin_scale = self.grid_length_x / 2
@@ -29,15 +33,12 @@ class World:
         h = self.grid_length_y * TS  # because y-range is [0, lengthy * TS]
         self.grass_tiles = pg.Surface((w, h + 2 * TS)).convert_alpha()  # 2 * TS padding
 
-        # import and convert images
-        self.tile_images = {}
-        for key in IMAGES.keys():
-            self.tile_images[key] = IMAGES[key].convert_alpha()
-
         self.world = self.create_world()  # contains tile info for world grid
+        self.collision_matrix = self.create_collision_matrix()  # for pathfinding
 
-        # init buildings list
+        # init buildings and workers 2-D matrices
         self.buildings = [[None for x in range(self.grid_length_x)] for y in range(self.grid_length_y)]
+        self.workers = [[None for x in range(self.grid_length_x)] for y in range(self.grid_length_y)]
 
         self.temp_tile = None
         self.tile_to_examine = None
@@ -76,16 +77,16 @@ class World:
 
                     ent = None
                     if self.hud.selected_tile['name'] == 'lumbermill':
-                        ent = LumberMill(render_pos, self.resource_manager)                        
+                        ent = LumberMill(render_pos, self.resource_manager, self.tile_images)                        
                     elif self.hud.selected_tile['name'] == 'masonry':
-                        ent = Masonry(render_pos, self.resource_manager)
+                        ent = Masonry(render_pos, self.resource_manager, self.tile_images)
                     if ent:
                         self.entities.append(ent)
                         self.buildings[grid_x][grid_y] = ent
                     
-                    # self.world[grid_x][grid_y]['tile'] = self.hud.selected_tile['name']
                     self.world[grid_x][grid_y]['collision'] = True
-                    # de-select the item
+                    self.collision_matrix[grid_y][grid_x] = 0  # x, y inverted for package compatibility
+                    # de-select the item - can alter for a continuous build mode
                     self.hud.selected_tile = None
         else:
             # similar to above
@@ -164,8 +165,7 @@ class World:
                     win.blit(img, (off_x, off_y))
 
                 # draw buildings
-                building = self.buildings[x][y]
-                
+                building = self.buildings[x][y]                
                 if building:
                     off_x = render_pos[0] + self.grass_tiles.get_width() / 2 + camera.scroll.x
                     off_y = render_pos[1] - (building.image.get_height() - TS) + camera.scroll.y
@@ -178,6 +178,13 @@ class World:
                             # apply offset to align mask with the image
                             mask = [(x + off_x, y + off_y) for x, y in mask]
                             pg.draw.polygon(win, EXAM_OBJ_COLOR, mask, SELECTED_BORDER)
+
+                # draw workers
+                worker = self.workers[x][y]
+                if worker:
+                    off_x = render_pos[0] + self.grass_tiles.get_width() / 2 + camera.scroll.x
+                    off_y = render_pos[1] - (worker.image.get_height() - TS) + camera.scroll.y
+                    win.blit(worker.image, (off_x, off_y))
 
 
         if self.temp_tile:
@@ -251,6 +258,17 @@ class World:
         }
 
     
+    def create_collision_matrix(self):
+        # passable = 1, impassable = 0 -- init the matrix with 1s
+        collision_matrix = [[1 for x in range(self.grid_length_x)] for y in range(self.grid_length_y)]
+        for x in range(self.grid_length_x):
+            for y in range(self.grid_length_y):
+                if self.world[x][y]['collision']:
+                    # set to 0 - invert x, y for compatibility with pathfinding package
+                    collision_matrix[y][x] = 0
+        return collision_matrix
+
+
     def mouse_to_grid(self, x, y, scroll):
         # convert Cart (x, y) to Iso coords
         # first we remove camera scroll and above x-offset

@@ -21,15 +21,16 @@ from .settings import (
     RSRC_PAD_RIGHT,
 )
 from .utils import draw_text
-from .data import IMAGES
-
 
 
 class HUD:
-    def __init__(self, resource_manager, width, height):
+    def __init__(self, resource_manager, width, height, game_images):
         self.resource_manager = resource_manager
         self.width, self.height = width, height
         self.hud_color = HUD_COLOR
+        self.images = {}
+        for key in game_images.keys():
+            self.images[key] = game_images[key].convert_alpha()
 
         # resources HUD
         self.rsrc_surf = pg.Surface((self.width * RSRC_SCALE[0], self.height * RSRC_SCALE[1]), pg.SRCALPHA)
@@ -48,10 +49,8 @@ class HUD:
                                                                 self.height * (1 - SELECT_SCALE[1] - HUD_PAD)))
         self.select_surf.fill(self.hud_color)
 
-        # images/interaction
-        self.images = {}
-        for key in IMAGES.keys():
-            self.images[key] = IMAGES[key].convert_alpha()
+        # interaction
+        
         self.tiles = self.create_build_hud()
         self.selected_tile = None
         self.examined_tile = None

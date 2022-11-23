@@ -3,6 +3,7 @@ import pygame as pg
 
 # local
 from game.game import Game
+from game.menu import StartMenu, GameMenu
 
 
 def main():
@@ -12,7 +13,9 @@ def main():
     win = pg.display.set_mode((0, 0), pg.FULLSCREEN)
     clock = pg.time.Clock()
     
-    # init menus
+    # implement menus
+    start_menu = StartMenu(win, clock)
+    game_menu = GameMenu(win, clock)
 
     # implement game
     game = Game(win, clock)
@@ -20,12 +23,15 @@ def main():
     while running:
 
         # start menu
-        pass
+        playing = start_menu.run()
 
         while playing:
 
             # game loop
             game.run()
+
+            # pause loop
+            playing = game_menu.run()
     
 
 if __name__ == '__main__':

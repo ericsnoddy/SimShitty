@@ -2,14 +2,13 @@
 import pygame as pg
 
 # local
-from .data import IMAGES
 from .settings import COOLDOWN_STONE, COOLDOWN_WOOD
 
 
 class LumberMill:
-    def __init__(self, pos, resource_manager):
+    def __init__(self, pos, resource_manager, game_images):
         self.name = 'lumbermill'
-        self.image = IMAGES[self.name].convert_alpha()        
+        self.image = game_images[self.name].convert_alpha()        
         self.rect = self.image.get_rect(topleft = pos)
         self.resource_manager = resource_manager
         self.resource_manager.apply_cost_to_resource(self.name)
@@ -25,9 +24,9 @@ class LumberMill:
 
 
 class Masonry:
-    def __init__(self, pos, resource_manager):
+    def __init__(self, pos, resource_manager, game_images):
         self.name = 'masonry'
-        self.image = IMAGES[self.name].convert_alpha()        
+        self.image = game_images[self.name].convert_alpha()        
         self.rect = self.image.get_rect(topleft = pos)
         self.resource_manager = resource_manager
         self.resource_manager.apply_cost_to_resource(self.name)

@@ -6,11 +6,13 @@ import pygame as pg
 
 # local
 from .settings import FPS, TS, TILES
+from .data import game_images
 from .utils import draw_text
 from .world import World
 from .camera import Camera
 from .hud import HUD
 from .resource_manager import ResourceManager
+from .workers import Worker
 
 class Game:
     def __init__(self, win, clock):
@@ -25,10 +27,11 @@ class Game:
         self.resource_manager = ResourceManager()
 
         # HUD
-        self.hud = HUD(self.resource_manager, self.width, self.height)
+        self.hud = HUD(self.resource_manager, self.width, self.height, game_images)
         
         # world
-        self.world = World(self.entities, self.resource_manager, self.hud, TILES, TILES, self.width, self.height)
+        self.world = World(self.entities, self.resource_manager, self.hud, TILES, TILES, self.width, self.height, game_images)
+        for _ in range(10): Worker(self.world, self.world.world[int(TILES // 2)][int(TILES // 2)], game_images)
 
         # camera
         scroll_start_x = (self.width - self.world.grass_tiles.get_width()) / 2  # map center
@@ -53,8 +56,7 @@ class Game:
                 sys.exit()
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_ESCAPE:
-                    pg.quit()
-                    sys.exit()
+                    self.playing = False
 
 
     def update(self):
